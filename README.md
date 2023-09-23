@@ -5,7 +5,7 @@ Machine learning is the phenomenon that a machine can learn without being explic
 ## Terminology
 
 Training set:
- The data used to train the model.
+The data used to train the model.
 
 ### Notation
 
