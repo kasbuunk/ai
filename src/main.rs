@@ -1,5 +1,114 @@
 use std::error::Error;
 
+mod multiple {
+    use std::error::Error;
+    use std::fs::File;
+    use std::io::BufRead;
+
+    pub struct DataPoint {
+        x: Vec<f64>,
+        y: f64,
+    }
+
+    pub fn linear_regression(
+        data: Vec<DataPoint>,
+        learning_rate: f64,
+        iterations: u32,
+    ) -> Vec<f64> {
+        // Initialise parameter.
+        let mut theta = vec![0.0; data[0].x.len() + 1];
+
+        // Update parameter.
+        for _ in 0..iterations {
+            // Calculate derivative w.r.t. theta0 and theta1.
+            let d_theta = derivatives(&data, &theta);
+            theta = update_parameters(learning_rate, theta, d_theta);
+        }
+
+        theta
+    }
+
+    fn update_parameters(learning_rate: f64, theta: Vec<f64>, d_theta: Vec<f64>) -> Vec<f64> {
+        let mut updated_theta: Vec<f64> = vec![];
+        // theta.iter().map(|theta_i| theta_i - learning_rate * d_theta)
+        for i in 0..theta.len() {
+            updated_theta.push(theta[i] - learning_rate * d_theta[i]);
+        }
+
+        updated_theta
+    }
+
+    fn derivatives(data: &Vec<DataPoint>, theta: &Vec<f64>) -> Vec<f64> {
+        let training_examples = data.len() as f64;
+
+        let mut d_theta: Vec<f64> = vec![];
+
+        d_theta.push(
+            data.iter()
+                .map(|data_point| {
+                    theta[0]
+                        + (theta[1..]
+                            .iter()
+                            .zip(data_point.x.iter())
+                            .map(|(&x, &y)| x * y)
+                            .sum::<f64>())
+                        - data_point.y
+                })
+                .sum::<f64>()
+                / training_examples,
+        );
+
+        for i in 0..theta.len() - 1 {
+            d_theta.push(
+                data.iter()
+                    .map(|data_point| {
+                        (theta[0]
+                            + (theta[1..]
+                                .iter()
+                                .zip(data_point.x.iter())
+                                .map(|(&x, &y)| x * y)
+                                .sum::<f64>())
+                            - data_point.y)
+                            * data_point.x[i]
+                    })
+                    .sum::<f64>()
+                    / training_examples,
+            );
+        }
+
+        d_theta
+    }
+
+    pub fn estimate_y(theta: Vec<f64>, x: Vec<f64>) -> f64 {
+        theta[0]
+            + theta[1..]
+                .iter()
+                .zip(x.iter())
+                .map(|(&x, &y)| x * y)
+                .sum::<f64>()
+    }
+
+    pub fn load_data(file_name: &str) -> Result<Vec<DataPoint>, Box<dyn Error>> {
+        let file = File::open(file_name)?;
+        let lines = std::io::BufReader::new(file).lines();
+        let mut data = Vec::new();
+
+        for line in lines {
+            if let Ok(line) = line {
+                let values: Vec<f64> = line.split(',').map(|s| s.trim().parse().unwrap()).collect();
+                let amount_features = values.len() - 1;
+                let data_point = DataPoint {
+                    x: values[0..amount_features].to_vec(),
+                    y: values[amount_features],
+                };
+                data.push(data_point);
+            }
+        }
+
+        Ok(data)
+    }
+}
+
 mod univariate {
     use std::error::Error;
     use std::fs::File;
@@ -84,20 +193,17 @@ mod univariate {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let data = univariate::load_data("data.csv")?;
+    let data = multiple::load_data("data.csv")?;
 
     let learning_rate = 0.000005;
     let iterations = 10_000_000;
 
-    let (theta0, theta1) = univariate::linear_regression(data, learning_rate, iterations);
+    let theta = multiple::linear_regression(data, learning_rate, iterations);
 
-    let given_x = 15.0;
-    let estimated_y = univariate::estimate_y(theta0, theta1, given_x);
-    println!("Given x = {}, estimated y is: {}", given_x, estimated_y);
-    println!(
-        "Estimation: (theta0 + theta1 * x) = ({} + {} * {})",
-        theta0, theta1, given_x
-    );
+    let given_x = vec![15.0];
+    let estimated_y = multiple::estimate_y(theta.clone(), given_x.clone());
+    println!("Given x = {:?}, estimated y is: {:?}", given_x, estimated_y);
+    println!("Estimation: theta * x = {:?}", theta,);
 
     Ok(())
 }

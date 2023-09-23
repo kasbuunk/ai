@@ -45,6 +45,8 @@ Regression is a learning algorithm where the output of the prediction is an orde
 
 Models
 - Univariate linear regression: a straight line fitting the training set with one input variable: `f(x) = a*x + b`
+- Multiple linear regression: a straight line fitting the training set with a vector of input variables: `f(x) = a1*x1 + a2*x2 + ... + an*xn + b`, where x is the vector of inputs and a is the vector of feature weights.
+N.B.: Multivariate regression is actually something else, but that's out of scope for this project.
 
 #### Example
 
