@@ -200,10 +200,41 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let theta = multiple::linear_regression(data, learning_rate, iterations);
 
-    let given_x = vec![15.0];
+    let given_x = vec![15.0, 2.0];
     let estimated_y = multiple::estimate_y(theta.clone(), given_x.clone());
     println!("Given x = {:?}, estimated y is: {:?}", given_x, estimated_y);
     println!("Estimation: theta * x = {:?}", theta,);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn multiple_linear_regression() {
+        let data = multiple::load_data("data.csv").unwrap();
+
+        let learning_rate = 0.000005;
+        let iterations = 1000;
+
+        let theta = multiple::linear_regression(data, learning_rate, iterations);
+
+        let given_x = vec![15.0, 2.0];
+        let best_theta = vec![10.0, 2.0, 100.0];
+        let true_y: f64 = best_theta[0]
+            + given_x
+                .iter()
+                .zip(best_theta.iter())
+                .map(|(&x, &y)| x * y)
+                .sum::<f64>();
+
+        let estimated_y = multiple::estimate_y(theta.clone(), given_x.clone());
+
+        let relative_difference = 1.0 - estimated_y / true_y;
+
+        println!("true_y={}, estimated_y={}", true_y, estimated_y);
+        assert!(relative_difference < 0.01);
+    }
 }
