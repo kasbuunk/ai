@@ -16,12 +16,13 @@ mod multiple {
         iterations: u32,
     ) -> Vec<f64> {
         // Initialise parameter.
-        let mut theta = vec![0.0; data[0].x.len() + 1];
+        let mut theta = vec![0.0; data[0].x.len()];
 
         // Update parameter.
         for _ in 0..iterations {
             // Calculate derivative w.r.t. theta0 and theta1.
             let d_theta = derivatives(&data, &theta);
+            println!("theta: {:?}", theta);
             theta = update_parameters(learning_rate, theta, d_theta);
         }
 
@@ -43,31 +44,15 @@ mod multiple {
 
         let mut d_theta: Vec<f64> = vec![];
 
-        d_theta.push(
-            data.iter()
-                .map(|data_point| {
-                    theta[0]
-                        + (theta[1..]
+        for i in 0..theta.len() {
+            d_theta.push(
+                data.iter()
+                    .map(|data_point| {
+                        ((theta[0..]
                             .iter()
                             .zip(data_point.x.iter())
                             .map(|(&x, &y)| x * y)
                             .sum::<f64>())
-                        - data_point.y
-                })
-                .sum::<f64>()
-                / training_examples,
-        );
-
-        for i in 0..theta.len() - 1 {
-            d_theta.push(
-                data.iter()
-                    .map(|data_point| {
-                        (theta[0]
-                            + (theta[1..]
-                                .iter()
-                                .zip(data_point.x.iter())
-                                .map(|(&x, &y)| x * y)
-                                .sum::<f64>())
                             - data_point.y)
                             * data_point.x[i]
                     })
@@ -80,12 +65,11 @@ mod multiple {
     }
 
     pub fn estimate_y(theta: Vec<f64>, x: Vec<f64>) -> f64 {
-        theta[0]
-            + theta[1..]
-                .iter()
-                .zip(x.iter())
-                .map(|(&x, &y)| x * y)
-                .sum::<f64>()
+        theta[..]
+            .iter()
+            .zip(x.iter())
+            .map(|(&x, &y)| x * y)
+            .sum::<f64>()
     }
 
     pub fn load_data(file_name: &str) -> Result<Vec<DataPoint>, Box<dyn Error>> {
@@ -98,7 +82,9 @@ mod multiple {
                 let values: Vec<f64> = line.split(',').map(|s| s.trim().parse().unwrap()).collect();
                 let amount_features = values.len() - 1;
                 let data_point = DataPoint {
-                    x: values[0..amount_features].to_vec(),
+                    x: std::iter::once(1.0)
+                        .chain(values[0..amount_features].iter().cloned())
+                        .collect(),
                     y: values[amount_features],
                 };
                 data.push(data_point);
@@ -217,24 +203,22 @@ mod tests {
         let data = multiple::load_data("data.csv").unwrap();
 
         let learning_rate = 0.000005;
-        let iterations = 1000;
+        let iterations = 1_000_000;
 
-        let theta = multiple::linear_regression(data, learning_rate, iterations);
+        let estimated_theta = multiple::linear_regression(data, learning_rate, iterations);
 
-        let given_x = vec![15.0, 2.0];
-        let best_theta = vec![10.0, 2.0, 100.0];
-        let true_y: f64 = best_theta[0]
-            + given_x
-                .iter()
-                .zip(best_theta.iter())
-                .map(|(&x, &y)| x * y)
-                .sum::<f64>();
+        let given_x = vec![1.0, 15.0, 2.0];
+        let true_theta = vec![10.0, 2.0, 100.0];
+        let true_y: f64 = given_x
+            .iter()
+            .zip(true_theta.iter())
+            .map(|(&x, &y)| x * y)
+            .sum::<f64>();
 
-        let estimated_y = multiple::estimate_y(theta.clone(), given_x.clone());
+        let estimated_y = multiple::estimate_y(estimated_theta.clone(), given_x.clone());
 
         let relative_difference = 1.0 - estimated_y / true_y;
 
-        println!("true_y={}, estimated_y={}", true_y, estimated_y);
         assert!(relative_difference < 0.01);
     }
 }
