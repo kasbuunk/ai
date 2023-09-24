@@ -10,61 +10,50 @@ mod multiple {
         y: f64,
     }
 
-    pub fn linear_regression(
-        data: Vec<DataPoint>,
-        learning_rate: f64,
-        iterations: u32,
-    ) -> Vec<f64> {
-        // Initialise parameter.
+    pub fn linear_regression(data: &[DataPoint], learning_rate: f64, iterations: u32) -> Vec<f64> {
         let mut theta = vec![0.0; data[0].x.len()];
+        let mut derivatives = vec![0.0; data[0].x.len()];
 
-        // Update parameter.
+        let training_examples = data.len() as f64;
+
         for _ in 0..iterations {
-            // Calculate derivative w.r.t. theta0 and theta1.
-            let d_theta = derivatives(&data, &theta);
-            println!("theta: {:?}", theta);
-            theta = update_parameters(learning_rate, theta, d_theta);
+            update_derivatives(data, training_examples, &theta, &mut derivatives);
+            update_theta(learning_rate, &mut theta, &derivatives);
         }
 
         theta
     }
 
-    fn update_parameters(learning_rate: f64, theta: Vec<f64>, d_theta: Vec<f64>) -> Vec<f64> {
-        let mut updated_theta: Vec<f64> = vec![];
-        // theta.iter().map(|theta_i| theta_i - learning_rate * d_theta)
+    fn update_theta(learning_rate: f64, theta: &mut [f64], d_theta: &[f64]) {
         for i in 0..theta.len() {
-            updated_theta.push(theta[i] - learning_rate * d_theta[i]);
+            theta[i] = theta[i] - learning_rate * d_theta[i];
         }
-
-        updated_theta
     }
 
-    fn derivatives(data: &Vec<DataPoint>, theta: &Vec<f64>) -> Vec<f64> {
-        let training_examples = data.len() as f64;
-
-        let mut d_theta: Vec<f64> = vec![];
-
+    fn update_derivatives(
+        data: &[DataPoint],
+        training_examples: f64,
+        theta: &[f64],
+        d_theta: &mut [f64],
+    ) {
         for i in 0..theta.len() {
-            d_theta.push(
-                data.iter()
-                    .map(|data_point| {
-                        ((theta[0..]
-                            .iter()
-                            .zip(data_point.x.iter())
-                            .map(|(&x, &y)| x * y)
-                            .sum::<f64>())
-                            - data_point.y)
-                            * data_point.x[i]
-                    })
-                    .sum::<f64>()
-                    / training_examples,
-            );
+            d_theta[i] = data
+                .iter()
+                .map(|data_point| {
+                    ((theta[0..]
+                        .iter()
+                        .zip(data_point.x.iter())
+                        .map(|(&x, &y)| x * y)
+                        .sum::<f64>())
+                        - data_point.y)
+                        * data_point.x[i]
+                })
+                .sum::<f64>()
+                / training_examples;
         }
-
-        d_theta
     }
 
-    pub fn estimate_y(theta: Vec<f64>, x: Vec<f64>) -> f64 {
+    pub fn estimate_y(theta: &[f64], x: &[f64]) -> f64 {
         theta[..]
             .iter()
             .zip(x.iter())
@@ -184,10 +173,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let learning_rate = 0.000005;
     let iterations = 10_000_000;
 
-    let theta = multiple::linear_regression(data, learning_rate, iterations);
+    let theta = multiple::linear_regression(&data, learning_rate, iterations);
 
     let given_x = vec![15.0, 2.0];
-    let estimated_y = multiple::estimate_y(theta.clone(), given_x.clone());
+    let estimated_y = multiple::estimate_y(&theta, &given_x);
     println!("Given x = {:?}, estimated y is: {:?}", given_x, estimated_y);
     println!("Estimation: theta * x = {:?}", theta,);
 
@@ -205,7 +194,7 @@ mod tests {
         let learning_rate = 0.000005;
         let iterations = 1_000_000;
 
-        let estimated_theta = multiple::linear_regression(data, learning_rate, iterations);
+        let estimated_theta = multiple::linear_regression(&data, learning_rate, iterations);
 
         let given_x = vec![1.0, 15.0, 2.0];
         let true_theta = vec![10.0, 2.0, 100.0];
@@ -215,10 +204,18 @@ mod tests {
             .map(|(&x, &y)| x * y)
             .sum::<f64>();
 
-        let estimated_y = multiple::estimate_y(estimated_theta.clone(), given_x.clone());
+        let estimated_y = multiple::estimate_y(&estimated_theta, &given_x);
 
         let relative_difference = 1.0 - estimated_y / true_y;
 
+        println!(
+            "true_theta={:?}, estimated_theta={:?}",
+            true_theta, estimated_theta
+        );
+        println!(
+            "true_y={}, estimated_y={}; relative_difference={}",
+            true_y, estimated_y, relative_difference
+        );
         assert!(relative_difference < 0.01);
     }
 }

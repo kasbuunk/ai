@@ -44,8 +44,8 @@ The choice of machine learning algorithm is to find an efficient algorithm that 
 Regression is a learning algorithm where the output of the prediction is an ordered value, like a (continuous) number. 
 
 Models
-- Univariate linear regression: a straight line fitting the training set with one input variable: `f(x) = a*x + b`
-- Multiple linear regression: a straight line fitting the training set with a vector of input variables: `f(x) = a1*x1 + a2*x2 + ... + an*xn + b`, where x is the vector of inputs and a is the vector of feature weights.
+- Univariate linear regression: a straight line fitting the training set with one input variable: `f(x) = w*x + b`
+- Multiple linear regression: a straight line fitting the training set with a vector of input variables: `f(x) = theta_0 + theta_1*x1 + theta_2*x2 + ... + theta_n*xn`, where x is the vector of inputs and theta is the vector of feature weights.
 N.B.: Multivariate regression is actually something else, but that's out of scope for this project.
 
 #### Example
@@ -60,6 +60,10 @@ Output: price in $1000s
 For univariate linear regression, the cost function is the average of the squared errors, with the error being the enumration of the differences between the predicted and actual data points.
 
 The goal is to minimize the cost function J, w.r.t. its paramters w, b. So J is a function of w and b, and its minimum is the solution to finding the parameters that give the chosen model the best fit to the data.
+
+#### Multiple linear regression
+
+For multiple linear regression, we generalise the w and b coefficients to a vector theta, and use the vector x for the data of the inputs. For easier and more understandable implementation, we prepend a 1.0 floating point number to the data in x, so the first value in theta refers to the constant, or y-intercept of the line that fits the data.
 
 ### Classification
 
