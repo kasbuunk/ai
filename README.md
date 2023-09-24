@@ -65,6 +65,14 @@ The goal is to minimize the cost function J, w.r.t. its paramters w, b. So J is 
 
 For multiple linear regression, we generalise the w and b coefficients to a vector theta, and use the vector x for the data of the inputs. For easier and more understandable implementation, we prepend a 1.0 floating point number to the data in x, so the first value in theta refers to the constant, or y-intercept of the line that fits the data.
 
+#### Feature scaling
+
+Feature scaling is the translation of data such that the ranges of values of each feature has a reasonably similar scale. The contour plot of the cost function will be more circular, rather than elliptic. This speeds up the gradient descent, i.e. fewer iterations are needed to arrive at the minimum of the cost function.
+
+One method to do so is by mean normalisation. First, find the average, maximum and minimum of all values per feature. Or, the maximum and minimum that data can reasonably take on as values. Then, for each data point i and feature j, the new data point ij is calculated by (x_ij - avg_j)/(max_j - min_j). Now, all values should for all features of all data points should be centered around zero in the range from -1 to 1.
+
+Another method is the Z-score normalistion. This is done similarly. Each data point x_ij is transformed as follows: (x_ij - avg_j) / std_dev_j, where std_dev_j is the standard deviation of all data points i of feature j.
+
 ### Classification
 
 Classification has a discrete, finite set of possible output values. It predicts to what output category or class the input data points most likely belong.

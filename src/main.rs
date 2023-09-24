@@ -5,9 +5,10 @@ mod multiple {
     use std::fs::File;
     use std::io::BufRead;
 
+    #[derive(Debug, Clone)]
     pub struct DataPoint {
-        x: Vec<f64>,
-        y: f64,
+        pub x: Vec<f64>,
+        pub y: f64,
     }
 
     pub fn linear_regression(data: &[DataPoint], learning_rate: f64, iterations: u32) -> Vec<f64> {
@@ -81,6 +82,64 @@ mod multiple {
         }
 
         Ok(data)
+    }
+
+    pub fn mean_normalisers(
+        data: &[DataPoint],
+    ) -> (Vec<Box<dyn Fn(f64) -> f64>>, Vec<Box<dyn Fn(f64) -> f64>>) {
+        let mut normalisers: Vec<Box<dyn Fn(f64) -> f64>> = vec![];
+        let mut inverters: Vec<Box<dyn Fn(f64) -> f64>> = vec![];
+
+        let amount_features = data[0].x.len();
+
+        let constant = move |x: f64| -> f64 { x };
+        normalisers.push(Box::new(constant));
+        inverters.push(Box::new(constant));
+
+        for feature in 1..amount_features {
+            let maximum = data
+                .iter()
+                .map(|data_point| data_point.x[feature])
+                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .unwrap();
+
+            let minimum = data
+                .iter()
+                .map(|data_point| data_point.x[feature])
+                .min_by(|a, b| a.partial_cmp(b).unwrap())
+                .unwrap();
+
+            let mean = data
+                .iter()
+                .map(|data_point| data_point.x[feature])
+                .sum::<f64>()
+                / data.len() as f64;
+
+            let normaliser = move |x: f64| -> f64 { (x - mean) / (maximum - minimum) };
+            let inverter = move |x: f64| -> f64 { x * (maximum - minimum) + mean };
+
+            normalisers.push(Box::new(normaliser));
+            inverters.push(Box::new(inverter));
+        }
+
+        (normalisers, inverters)
+    }
+
+    pub fn normalise(
+        data: &[DataPoint],
+        normalisers: &[Box<dyn Fn(f64) -> f64>],
+    ) -> Vec<DataPoint> {
+        data.iter()
+            .map(|data_point| DataPoint {
+                x: data_point
+                    .x
+                    .iter()
+                    .zip(normalisers.iter())
+                    .map(|(&x, normaliser)| normaliser(x))
+                    .collect(),
+                y: data_point.y,
+            })
+            .collect()
     }
 }
 
@@ -191,27 +250,35 @@ mod tests {
     fn multiple_linear_regression() {
         let data = multiple::load_data("data.csv").unwrap();
 
-        let learning_rate = 0.000005;
-        let iterations = 1_000_000;
+        let (normalisers, inverters) = multiple::mean_normalisers(&data);
 
-        let estimated_theta = multiple::linear_regression(&data, learning_rate, iterations);
+        assert!(data[0].x.len() == normalisers.len());
+        assert!(data[0].x.len() == inverters.len());
+
+        let normalised_data = multiple::normalise(&data, &normalisers);
+
+        let learning_rate = 0.05;
+        let iterations = 3;
+
+        let estimated_theta =
+            multiple::linear_regression(&normalised_data, learning_rate, iterations);
 
         let given_x = vec![1.0, 15.0, 2.0];
-        let true_theta = vec![10.0, 2.0, 100.0];
-        let true_y: f64 = given_x
+        let normalised_x: Vec<f64> = given_x
+            .clone()
             .iter()
-            .zip(true_theta.iter())
-            .map(|(&x, &y)| x * y)
-            .sum::<f64>();
+            .zip(normalisers.iter())
+            .map(|(&x, normaliser)| normaliser(x))
+            .collect();
 
-        let estimated_y = multiple::estimate_y(&estimated_theta, &given_x);
+        let true_y = 240.0;
+
+        let estimated_y = multiple::estimate_y(&estimated_theta, &normalised_x);
 
         let relative_difference = 1.0 - estimated_y / true_y;
 
-        println!(
-            "true_theta={:?}, estimated_theta={:?}",
-            true_theta, estimated_theta
-        );
+        println!("normalised_x={:?}", normalised_x);
+        println!("estimated_theta={:?}", estimated_theta);
         println!(
             "true_y={}, estimated_y={}; relative_difference={}",
             true_y, estimated_y, relative_difference
