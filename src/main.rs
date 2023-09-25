@@ -62,6 +62,11 @@ mod multiple {
             .sum::<f64>()
     }
 
+    // load_data assumes the data has all columns but the last for input data, the last being the
+    // target. The amount of features is thus the amount of columns minus 1, and during
+    // preprocessing a feature is prepended being the value 1.0 for all data points, to estimate
+    // the constant. Behaviour of the algorithm is not defined for incorrect data format. All
+    // rows must have exactly one floating point value for all columns.
     pub fn load_data(file_name: &str) -> Result<Vec<DataPoint>, Box<dyn Error>> {
         let file = File::open(file_name)?;
         let lines = std::io::BufReader::new(file).lines();
