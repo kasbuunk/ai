@@ -105,14 +105,12 @@ mod multiple {
             let maximum = data
                 .iter()
                 .map(|data_point| data_point.x[feature])
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
-                .unwrap();
+                .fold(f64::NEG_INFINITY, |max, x| if x > max { x } else { max });
 
             let minimum = data
                 .iter()
                 .map(|data_point| data_point.x[feature])
-                .min_by(|a, b| a.partial_cmp(b).unwrap())
-                .unwrap();
+                .fold(f64::INFINITY, |min, x| if x < min { x } else { min });
 
             let mean = data
                 .iter()
