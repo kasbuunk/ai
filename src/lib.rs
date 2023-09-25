@@ -22,9 +22,9 @@ pub mod multiple {
         let mut costs = vec![];
 
         for _ in 0..iterations {
-            costs.push(compute_cost(&data, &theta));
             update_derivatives(data, training_examples, &theta, &mut derivatives);
             update_theta(learning_rate, &mut theta, &derivatives);
+            costs.push(compute_cost(&data, &theta));
         }
 
         (theta, costs)
