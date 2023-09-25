@@ -54,6 +54,14 @@ mod multiple {
         }
     }
 
+    fn compute_cost(data: &[DataPoint], theta: &[f64]) -> f64 {
+        data.iter()
+            .map(|data_point| (estimate_y(theta, &data_point.x) - data_point.y))
+            .map(|number| number * number)
+            .sum::<f64>()
+            / (2.0 * theta.len() as f64)
+    }
+
     pub fn estimate_y(theta: &[f64], x: &[f64]) -> f64 {
         theta[..]
             .iter()
