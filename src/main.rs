@@ -21,7 +21,7 @@ fn plot_data(data: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
     let mut chart = ChartBuilder::on(&root)
         .x_label_area_size(40)
         .y_label_area_size(80)
-        .build_cartesian_2d(0.0..(data.len() as f64), min_val..max_val)?;
+        .build_cartesian_2d(0.0..(data.len() as f64), 0.0..max_val)?;
 
     // Draw the data as a line plot
     chart.configure_mesh().x_labels(10).y_labels(10).draw()?;
@@ -35,13 +35,15 @@ fn plot_data(data: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let data = multiple::load_data("data.csv")?;
+    let file_name = "houses.csv";
+
+    let data = multiple::load_data(file_name)?;
     let (normalisers, _inverters) = multiple::mean_normalisers(&data);
 
     let normalised_data = multiple::normalise(&data, &normalisers);
 
     let learning_rate = 1.0;
-    let iterations = 100;
+    let iterations = 1000;
 
     let (estimated_theta, costs) =
         multiple::linear_regression(&normalised_data, learning_rate, iterations);
@@ -51,7 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("Error: {:?}", err);
     }
 
-    let given_x = vec![1.0, 15.0, 2.0];
+    let given_x = vec![1.0, 950.0, 2.0, 1.0, 6.5];
     let normalised_x: Vec<f64> = given_x
         .clone()
         .iter()
