@@ -77,6 +77,31 @@ Another method is the Z-score normalistion. This is done similarly. Each data po
 
 Classification has a discrete, finite set of possible output values. It predicts to what output category or class the input data points most likely belong.
 
+The target variable y can be one of a number of values. If there are two possible values, it is called a binary classification problem.
+
+Linear regression is a bad choice to fit classification data. The least squares may give too much weight to outliers, which means data points closer to the decision boundary may unnecessarily be predicted to have the wrong class. Another reason is that the values a line can take on includes the entire real number line, where everything outside the range from zero to one has little meaning.
+
+Logistic regression is a good model to predict a binary classification problem. We can use the sigmoid function, which is a logistic function that outputs between 0 and 1.
+
+g(z) = 1/(1+e^-z)
+
+When z is very large, g(z) approaches 1. When z is a large negative number, g(z) approaches 0. When z = 0, g(z) = 0.5.
+
+We combine the linear regression with the sigmoid function to find logistic regression.
+
+f_wb(x) = g(w*x+b) = 1/(1+e^-(w*x+b))
+
+The decision boundary is a threshold number. If the output of the logistic regression is greater than the boundary, the estimate of the target will be 1. With the logistic regression model, it turns out that the decision boundary is the line that crosses the y-axis.
+
+The cost function is still the average loss, but the loss is calculated differently compared to that of linear regression.
+
+The loss function L is conditional on the value of the target (sub and super scripts omitted for readability):
+L(f, y) = {
+    -log(f(x)) if y = 1
+    -log(1- f(x)) if y = 0
+}
+
+
 ## Unsupervised learning
 
 Useful when given data has no labels. The goal is to find some pattern, structure in the data.

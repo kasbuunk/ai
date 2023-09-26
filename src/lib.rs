@@ -9,6 +9,14 @@ pub mod multiple {
         pub y: f64,
     }
 
+    fn sigmoid(number: f64) -> f64 {
+        1.0 / (1.0 + f64::exp(-number))
+    }
+
+    fn logistic_loss(estimated_y: f64, true_y: f64) -> f64 {
+        -true_y * f64::ln(estimated_y) - (1.0 - true_y) * f64::ln(1.0 - estimated_y)
+    }
+
     pub fn linear_regression(
         data: &[DataPoint],
         learning_rate: f64,
