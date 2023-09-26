@@ -17,6 +17,21 @@ pub mod multiple {
         -true_y * f64::ln(estimated_y) - (1.0 - true_y) * f64::ln(1.0 - estimated_y)
     }
 
+    fn compute_logistic_cost(data: &[DataPoint], theta: &[f64]) -> f64 {
+        data.iter()
+            .map(|data_point| {
+                let estimated_y = data_point
+                    .x
+                    .iter()
+                    .zip(theta.iter())
+                    .map(|(&feature, &weight)| feature * weight)
+                    .sum::<f64>();
+                logistic_loss(estimated_y, data_point.y)
+            })
+            .sum::<f64>()
+            / data.len() as f64
+    }
+
     pub fn linear_regression(
         data: &[DataPoint],
         learning_rate: f64,
