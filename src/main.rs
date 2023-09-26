@@ -1,4 +1,4 @@
-use ai::multiple;
+use ai::regression;
 use std::error::Error;
 
 use plotters::prelude::*;
@@ -37,23 +37,23 @@ fn plot_data(data: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
 fn main() -> Result<(), Box<dyn Error>> {
     let file_name = "houses.csv";
 
-    let data = multiple::load_data(file_name)?;
-    let (normalisers, _inverters) = multiple::mean_normalisers(&data);
+    let data = regression::load_data(file_name)?;
+    let (normalisers, _inverters) = regression::mean_normalisers(&data);
 
-    let normalised_data = multiple::normalise(&data, &normalisers);
+    let normalised_data = regression::normalise(&data, &normalisers);
 
     let learning_rate = 1.0;
-    let iterations = 1000;
+    let iterations = 500;
 
     let (estimated_theta, costs) =
-        multiple::linear_regression(&normalised_data, learning_rate, iterations);
+        regression::linear_regression(&normalised_data, learning_rate, iterations);
 
     // Plot the data
     if let Err(err) = plot_data(&costs) {
         eprintln!("Error: {:?}", err);
     }
 
-    let given_x = vec![1.0, 950.0, 2.0, 1.0, 6.5];
+    let given_x = vec![1.0, 1200.0, 3.0, 1.0, 40.0];
     let normalised_x: Vec<f64> = given_x
         .clone()
         .iter()
@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .map(|(&x, normaliser)| normaliser(x))
         .collect();
 
-    let estimated_y = multiple::estimate_y(&estimated_theta, &normalised_x);
+    let estimated_y = regression::estimate_y(&estimated_theta, &normalised_x);
 
     println!("Given x = {:?}, estimated y is: {:?}", given_x, estimated_y);
 

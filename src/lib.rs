@@ -1,4 +1,4 @@
-pub mod multiple {
+pub mod regression {
     use std::error::Error;
     use std::fs::File;
     use std::io::BufRead;
@@ -7,6 +7,27 @@ pub mod multiple {
     pub struct DataPoint {
         pub x: Vec<f64>,
         pub y: f64,
+    }
+
+    pub fn logistic_regression(
+        data: &[DataPoint],
+        learning_rate: f64,
+        iterations: u32,
+    ) -> (Vec<f64>, Vec<f64>) {
+        let mut theta = vec![0.0; data[0].x.len()];
+        let mut derivatives = vec![0.0; data[0].x.len()];
+
+        let training_examples = data.len() as f64;
+
+        let mut costs = vec![];
+
+        for _ in 0..iterations {
+            update_logistic_derivatives(data, training_examples, &theta, &mut derivatives);
+            update_theta(learning_rate, &mut theta, &derivatives);
+            costs.push(compute_logistic_cost(&data, &theta));
+        }
+
+        (theta, costs)
     }
 
     fn sigmoid(number: f64) -> f64 {
@@ -32,6 +53,31 @@ pub mod multiple {
             / data.len() as f64
     }
 
+    fn update_logistic_derivatives(
+        data: &[DataPoint],
+        training_examples: f64,
+        theta: &[f64],
+        d_theta: &mut [f64],
+    ) {
+        for i in 0..theta.len() {
+            d_theta[i] = data
+                .iter()
+                .map(|data_point| {
+                    ((theta[0..]
+                        .iter()
+                        .zip(data_point.x.iter())
+                        .map(|(&x, &y)| x * y)
+                        // Logistic regression applies sigmoid, otherwise the same as linear regression.
+                        .map(|x| sigmoid(x))
+                        .sum::<f64>())
+                        - data_point.y)
+                        * data_point.x[i]
+                })
+                .sum::<f64>()
+                / training_examples;
+        }
+    }
+
     pub fn linear_regression(
         data: &[DataPoint],
         learning_rate: f64,
@@ -45,7 +91,7 @@ pub mod multiple {
         let mut costs = vec![];
 
         for _ in 0..iterations {
-            update_derivatives(data, training_examples, &theta, &mut derivatives);
+            update_linear_derivatives(data, training_examples, &theta, &mut derivatives);
             update_theta(learning_rate, &mut theta, &derivatives);
             costs.push(compute_cost(&data, &theta));
         }
@@ -59,7 +105,7 @@ pub mod multiple {
         }
     }
 
-    fn update_derivatives(
+    fn update_linear_derivatives(
         data: &[DataPoint],
         training_examples: f64,
         theta: &[f64],
@@ -188,20 +234,20 @@ mod tests {
 
     #[test]
     fn multiple_linear_regression() {
-        let data = multiple::load_data("data.csv").unwrap();
+        let data = regression::load_data("data.csv").unwrap();
 
-        let (normalisers, inverters) = multiple::mean_normalisers(&data);
+        let (normalisers, inverters) = regression::mean_normalisers(&data);
 
         assert!(data[0].x.len() == normalisers.len());
         assert!(data[0].x.len() == inverters.len());
 
-        let normalised_data = multiple::normalise(&data, &normalisers);
+        let normalised_data = regression::normalise(&data, &normalisers);
 
         let learning_rate = 1.0;
         let iterations = 5;
 
         let (estimated_theta, _) =
-            multiple::linear_regression(&normalised_data, learning_rate, iterations);
+            regression::linear_regression(&normalised_data, learning_rate, iterations);
 
         let given_x = vec![1.0, 15.0, 2.0];
         let normalised_x: Vec<f64> = given_x
@@ -211,7 +257,7 @@ mod tests {
             .map(|(&x, normaliser)| normaliser(x))
             .collect();
 
-        let estimated_y = multiple::estimate_y(&estimated_theta, &normalised_x);
+        let estimated_y = regression::estimate_y(&estimated_theta, &normalised_x);
 
         let true_y = 240.0;
 
