@@ -101,6 +101,15 @@ L(f, y) = {
     -log(1- f(x)) if y = 0
 }
 
+### Regularisation
+
+Regulaisation addresses the problem of overfitting. It lets you keep the high amount of features, but reduces their impact. It offers a middle ground between keeping all features and removing features altogether.
+
+In practice, regularisation is implemented by adding a term to the cost function: lambda/(2*m) * sum_over_j(w_j^2). That is, sum all feature weights squared - to get a sense of how much weight is put to all features, and divide by the amount of training examples. Lambda is some positive regulasation parameter that can be tuned. We divide by m to make the same regularisation parameter work for more data sets.
+
+### Neural networks
+
+Neural networks are a modeling choice for supervised learning, because the data set that the algorithm is trained on uses labeled data. The design uses layers of activation functions to let the learning algorithm figure out complex connections between the features of the training examples and the output variable.
 
 ## Unsupervised learning
 

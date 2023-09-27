@@ -11,7 +11,7 @@ fn plot_data(data: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
     root.fill(&WHITE)?;
 
     // Find the minimum and maximum values in the data vector
-    let (min_val, max_val) = data
+    let (_min_val, max_val) = data
         .iter()
         .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), &x| {
             (min.min(x), max.max(x))
@@ -35,7 +35,7 @@ fn plot_data(data: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let file_name = "houses.csv";
+    let file_name = "data/houses.csv";
 
     let data = regression::load_data(file_name)?;
     let (normalisers, _inverters) = regression::mean_normalisers(&data);
@@ -43,10 +43,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let normalised_data = regression::normalise(&data, &normalisers);
 
     let learning_rate = 1.0;
+    let regularisation_parameter = 0.1;
     let iterations = 500;
 
-    let (estimated_theta, costs) =
-        regression::linear_regression(&normalised_data, learning_rate, iterations);
+    let (estimated_theta, costs) = regression::linear_regression(
+        &normalised_data,
+        learning_rate,
+        regularisation_parameter,
+        iterations,
+    );
 
     // Plot the data
     if let Err(err) = plot_data(&costs) {
