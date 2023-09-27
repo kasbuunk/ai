@@ -1,5 +1,7 @@
 # Rust AI
 
+_This project implements various machine learning algorithms with the Rust programming language. It showcases how easy it can be to create useful algorithms with few dependencies and safe, high-level functional programming principles. Further optimisation can be done to use crates to leverage parallel computations, such as the rayon and ndarray crates, which should be easy to integrate. Moreover, the linfa framework is promising to be a fruitful ecosystem to build real ML programs in._
+
 Machine learning is the phenomenon that a machine can learn without being explicitly programmed what it's doing.
 
 ## Terminology
