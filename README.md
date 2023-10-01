@@ -40,7 +40,6 @@ The function is an expression that maps the input to the output through some cal
 
 The choice of machine learning algorithm is to find an efficient algorithm that tunes the parameters in the model that reduce the cost function.
 
-
 ### Regression 
 
 Regression is a learning algorithm where the output of the prediction is an ordered value, like a (continuous) number. 
@@ -103,6 +102,18 @@ L(f, y) = {
     -log(1- f(x)) if y = 0
 }
 
+The final step is to find the vector theta such that the cost function is minimised. That is achieved by applying the gradient descent algorithm.
+
+#### Multiclass classification
+
+A classification problem where there are more than two potential classes the output target should be able to predict.
+
+Softmax regression, rather than logistic regression, is an algorithm that can predict multiclass classification problems. Use the SparseCategoryCrossEntropy function as the activation function, because only one of the potential categories should be predicted to be the outcome.
+
+#### Multilabel classification
+
+A classification problem where where a subset of the potential categories is predicted. Since each of the last activation layer is separately a binary outcome, we can use the sigmoid activation function.
+
 ### Regularisation
 
 Regulaisation addresses the problem of overfitting. It lets you keep the high amount of features, but reduces their impact. It offers a middle ground between keeping all features and removing features altogether.
@@ -112,6 +123,62 @@ In practice, regularisation is implemented by adding a term to the cost function
 ### Neural networks
 
 Neural networks are a modeling choice for supervised learning, because the data set that the algorithm is trained on uses labeled data. The design uses layers of activation functions to let the learning algorithm figure out complex connections between the features of the training examples and the output variable.
+
+First, we define the model. The model of a neural network, as with the other supervised learning algorithms, is the function that maps the input features to an estimated output variable. An example of a neural network model is a sequence of activation vectors, starting with the input features, where each activation vector is the product of multiplying the previous activation vector by the weight vector of the current activation layer to forward propagate the estimation of, in the end, a single value that can be interpreted as the estimation. Or, even this can be a vector, if multiple output values are defined.
+
+Then, we define a loss function, such as the binary cross entropy or mean squared error function.
+
+Finally, we 'fit' or train the model on the data, resulting in the feature weight matrices. The training is done with the backpropagation algorithm.
+
+We can still use neural networks to do bothh classification and regression. Whether you should choose a neural network for your model depends more on the type of pattern in the data, than the type of output you fit the data on.
+
+#### Layers
+
+A typical choice for the layer is the Dense layer, which simply maps all neurons from the previous layer to all neurons in the current Dense layer.
+
+Another choice is a Convolutional layer. This lets each neuron look only at a subset of the previous layer's outputs. It speeds up the computation and is less prone to overfitting, or needs fewer training examples. Each neuron can look at an overlapping window of the input vector. The next layer may also be a convolutional layer, i.e. its neurons each also only take a specific subset of the previous layer as input.
+
+#### When to use?
+
+Neural networks work well on structured and unstructured data. A large neural network may be slower than a decison tree. It can work with transfer learning. Multiple models can be built or strung together.
+
+### Decision trees
+
+A decision tree is a data structure that represents how an algorithm may decide to predict a data point fits a particular category, by walking the tree across decision nodes until a leaf node is found. The label of the leaf node represents the prediction.
+
+How to choose what feature to split on at each node? Maximise purity: choose the feature that best separates the data per subbranch.
+
+When do you stop splitting? When a node is 100% one class, is an easy way if possible. Another way is to set a maximum depth and disallow splitting further if the tree length meets the limit. Another way is if the improvements in purity are below some threshold, indicating further refinement is not rewarding the performance. Also, when the number of examples in a node is below some threshold, it may indicate the algorithm would not generalise well to new data.
+
+#### Entropy
+
+Entropy is the measure of impurity. H(p1) = -p1 * log2(p1) - p0*log2(p0), with p_i the fraction of the population being in category i.
+
+Choosing the right split can be done by picking the split with the lowest average entropy. We compute the reduction in average (or expected) entropy, which comes down to the highest information gain.
+
+The same principle also applies to splitting on a continuous variable. As long as the output variable is binary, you can pick the threshold that maximises information gain.
+
+#### Regression trees
+
+We now not just use the information gain, but take the reduction in variance into account as the weight per split option of the respective decrease in weighted variance/entropy.
+
+#### Tree ensembles
+
+Multiple decision trees are build concurrently, because although maximising information gain may at first be the most reasonable choice, later anothor choice may have been better. Allowing multiple trees gives the opportunity to make the choice later, when more is known what the long-term effects are of a particular choice. This improves the robustness of the algorithm. To predict the outcome given the data point, the algorithm can weigh the different predictions that each decision tree makes.
+
+#### Random forests
+
+Also called a bagged decision tree, a random forest is a tree ensemble that uses sampling with replacement, i.e. take a sample from the original data set that may have data points repeating. Choose a number of trees, B, and for each tree, pick a sample of training examples. In addition, the random forest also picks a random amount of features, n, like the square root of n.
+
+On prediction, the trees all vote on a particular outcome, where a typical decision boundary is to pick the outcome with the most votes.
+
+#### XGBoost
+
+EXtreme Gradient Boosting, or XGBoost, is similar to the bagged decision tree, but it emphasises to use training examples that are misclassified with a higher probability. This, in order to boost the performance for data points that it performs most poorly on.
+
+#### When to use?
+
+Decision trees work well on tabular or structured data. It does not work well on unstructured data, like images, audio, video or text. It's very fast and in small cases it may be more human interpretable than a neural network.
 
 ## Unsupervised learning
 
@@ -148,3 +215,94 @@ Start out with some parameters. Keep changing the parameters until we have found
 If you're already at or near a local minimum, an iteration of gradient descent will not or barely change w.
 
 Batch gradient descent specifies that each step of the descent uses all training data, rather than subsets.
+
+### Adam
+
+Adaptive Moment estimation, or Adam, is essentially the same as gradient descent, but it automatically adjusts its learning rate to move faster to an optimum.
+
+## Diagnostics
+
+### Evaluating a model
+
+To evaluate the model, you can split the data set into a training and test set, e.g. 70 and 30%, respectively. We first train the parameters by minimising the cost function. Then, we compute the test error (without regularisation) to know how well the model generalises to new data. Or in other words, how much the model overfits the training data. If the test error is quite high compared to the train error, it's likely the model suffers from overfitting. Remember to compute the training error a second time at the end, also without the regularisation parameter, which was only necessary for training purposes. For classification problems, it may be more indicative to review and compare the fraction of the test and train set that the algorithm has misclassified.
+
+We can also choose a model programmatically. We can predefine a set of possible models, like different order of polynomials or different compositions of layers in a neural network. But now we cannot simply use the test error to estimate the cost of the model. We actually need an extra set of isolated training examples, which we call the cross-validation set. It's also called the validation, development or dev set. We ten use the cross-validation set to carry out model selection, e.g. to select the polynomial degree. We check what model does best on the validation set and use that model to review the test cost, to have a fair, unbiased view of the perfomance of how your model generalises.
+
+A baseline error level can help serve as a benchmark to evaluate the performance of the model on the train, cv and test data. Examples are: human level performance, a competing algorithm or just a prior guess.
+
+#### High bias 
+
+High bias means the training error is high. The model underfits the training data. It will likely also underfit the cv data. More training data is unlikely to help. But you can try to find a better model. 
+
+Try to:
+- Decrease the regularisation parameter lambda.
+- Enrich the data by finding additional features.
+- Choose a more complex model, such as (more layers in) a neural network or adding polynomial features.
+
+#### High variance
+
+High variance means the model overfits the training data. It may help to collect more data. And you can try a simpler model, if the training error also remains low, i.e. a simpler model does not cause underfitting.
+
+Try to:
+- Get more training examples.
+- Increase the regularisation parameter lambda.
+- Pick a smaller set of features.
+- Choose a simpler model.
+
+#### Learning rate
+
+You can plot the train and cv error as a function of the amount of training examples. This indicates whether adding additional data is helpful for improving the performance.
+
+#### Neural networks
+
+Large neural networks can often achieve low bias. If it does not yet, make it a bigger network and at some time the bias must become low. If it doet not do well on the cv set yet, more data is the solution. Of course, gathering data and bigger networks both come with their costs, if feasible at all. 
+
+In practice, larger neural networks with regularisation often do a lot better than simpler networks without regularisation. It hardly ever hurts to make the network bigger, as long as regularisation is chosen appropriately.
+
+## Machine learning development
+
+Steps involve a loop: First, choose an architecture. That includes the model, what the type of the output should be represented with, the algorithm to minimise the cost function, regularisation parameter, etc. Potentially this step includes engineering the existing data or finding additional data.
+
+Next, train the model.
+
+Finally, diagnose the performance of the model. Based on the results, go back to the architecture.
+
+### Error analysis
+
+A way to find misclassifications is to manually go through the data that a sample of the wrong output is predicted. If you observe a pattern, this may inspire whether collecting additional examples or features of the existing data may help.
+
+### Adding data
+
+If error analysis has shown a specific subset has poor perforamnce, adding data of a particular type may be more fruitful than adding data on any target type.
+
+#### Data augmentation
+
+In augmentation, you apply distortians or transformations to existing training examples to create extra data that has the same output labels. Random or meaningless noise is usually not helpful for the performance.
+
+#### Data synthesis
+
+Artificial data synthesis is creation of fake data. It can be a lot of work to generate this, but can be a lot cheaper than gathering the actual data. It can be just as effective as real data.
+
+#### Transfer learning
+
+Transfer learning is useful for ML problems with very few data. It leverages existing, pre-trained models. Use the parameters, replacing the last output layer with your own output units. 
+
+The input data needs to match the input of the pre-trained model. Some preprocessing, or even a layer in-between, may be necessary as some sort of translation layer.
+
+##### Suprevised pre-training
+
+Next, an option is to only train the output layer parameters and keep all previous layers as they are. THere is a large amount of pre-trained models that can be found online to leverage this.
+
+##### Fine-tuning
+
+Another option is to train all parameters, effectively fine-tuning the pretrained model.
+
+### Skewed data
+
+If some outcomes are rare, or the distribution of numeric values is skewed in the sense that some ranges of values occur significantly more often, the data is skewed. This may bias the algorithm to just predict the more common case and the cost function will reward it anyway.
+
+We can use precision and recall as metrics to measure this. The precision is the fraction of true positives divided by the predicted positives. Of all cases where we predict y=1, what fraction of those predictions were accurate? The recall is the fraction of the true positives divided by the actual positives. Of all data points where y=1, how many were correctly predicted as such?
+
+To balance between precision and recall, we can set the threshold higher or lower, in case of binary classes as outcome.
+
+If a single metric is desired, use the F1 score. The average between the two can be very bad at balancing if the data is skewed. F1 = 2*P*R / (P+R). This is also called the Harmonic Mean.
